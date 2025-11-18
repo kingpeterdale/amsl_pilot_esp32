@@ -19,7 +19,7 @@ void setup() {
   //RC Override
   state.wd_count = 0;
   state.rc = false;
-  attachInterrupt(digitalPinToInterrupt(RC), rcOverride, RISING);
+  attachInterrupt(digitalPinToInterrupt(RC), rcInterrupt, RISING);
 
   state.servo1_us = 1500;
   state.servo2_us = 1500;
@@ -37,7 +37,7 @@ void setup() {
 
 }
 
-void rcOverride() {
+void rcInterrupt() {
   usPrevPulse = usLastPulse;
   usLastPulse = micros();
   usDelta = usLastPulse - usPrevPulse;
@@ -50,5 +50,6 @@ void rcOverride() {
     pulseCount++;
   }
 }
+
 void loop() {
 }
