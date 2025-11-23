@@ -1,16 +1,15 @@
+#include <ESP32Servo.h>
+
 const int SERVO1 = 2; //Left, or Thruster
 const int SERVO2 = 3; //Right, or Rudder
 const int RC = 4;     //RC PPM input
-const int FREQ = 50;  //50Hz servo pwm frequency
-
-const unsigned long SERVO1_MAX_US = 1700;
-const unsigned long SERVO1_MIN_US = 1300;
-
-const unsigned long SERVO2_MAX_US = 1800;
-const unsigned long SERVO2_MIN_US = 1200;
 
 const unsigned long WATCHDOG_DELAY = 5000;
 const unsigned long STATUS_DELAY = 1000;
+
+// Servos
+Servo servo1;
+Servo servo2;
 
 //RC Override
 unsigned long usLastPulse;
@@ -28,7 +27,7 @@ char cmd[64];
 unsigned int cmd_i = 0;
 unsigned long last_status = millis();
 unsigned long last_servo_cmd = millis();
-String control_state = "WD";
+String control_state = "<>";
 
 
 /** setServos
@@ -36,12 +35,8 @@ String control_state = "WD";
 */
 void setServos(String id) {
   control_state = id;
-  servo_1_us = min(SERVO1_MAX_US, max(SERVO1_MIN_US, servo_1_us));
-  servo_2_us = min(SERVO2_MAX_US, max(SERVO2_MIN_US, servo_2_us));
-
-  analogWrite(SERVO1,long(1024 * servo_1_us / 20000));
-  analogWrite(SERVO2,long(1024 * servo_2_us / 20000));
-
+  servo1.write(servo_1_us);
+  servo2.write(servo_2_us);
   last_servo_cmd = millis();
 }
 /** status
@@ -88,18 +83,23 @@ void rcInterrupt() {
       configure system 
 */
 void setup() {
-  pinMode(SERVO1,OUTPUT);
-  pinMode(SERVO2,OUTPUT);
-  pinMode(RC, INPUT);
-  analogWriteResolution(10);
-  analogWriteFrequency(FREQ);
   Serial.begin(9600);
-
+  delay(1000);
+  ESP32PWM::allocateTimer(0);
+	ESP32PWM::allocateTimer(1);
+	ESP32PWM::allocateTimer(2);
+	ESP32PWM::allocateTimer(3);
+	servo1.setPeriodHertz(50);
+	servo1.attach(SERVO1, 1300, 1700);
+  servo2.setPeriodHertz(50);
+	servo2.attach(SERVO2, 1300, 1700);
+  
   // Setup ESC
-  setServos("<>");
-  status();
-  delay(3000);
-  status();
+  Serial.println("Initialising ESC");
+  servo1.write(1500);
+  servo2.write(1500);
+  delay(5000);
+  Serial.println("End Setup");
 
   attachInterrupt(digitalPinToInterrupt(RC), rcInterrupt, RISING);
 }
@@ -151,7 +151,7 @@ void loop() {
     servo_2_us = 1500;
     setServos("WD");
   }
-
+  //setServos("TS");
   //Update Status
   //  periodically send a status message
   if (millis() - last_status > STATUS_DELAY) {
