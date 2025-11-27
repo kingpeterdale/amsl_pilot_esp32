@@ -92,7 +92,7 @@ void setup() {
 	servo1.setPeriodHertz(50);
 	servo1.attach(SERVO1, 1300, 1700);
   servo2.setPeriodHertz(50);
-	servo2.attach(SERVO2, 1300, 1700);
+	servo2.attach(SERVO2, 800, 2200);
   
   // Setup ESC
   Serial.println("Initialising ESC");
